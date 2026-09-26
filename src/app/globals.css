@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --bg-primary: #FDFBF7;
+  --bg-cream: #F7F3EB;
+  --text-main: #1C1917;
+  --text-muted: #57534E;
+  --gold-accent: #B8922E;
+  --gold-light: #DFBD69;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-serif {
+  font-family: var(--font-serif);
+}
+
+/* Custom Editorial Styling */
+.editorial-lead {
+  font-size: 1.25rem;
+  line-height: 1.75;
+  color: #44403C;
+  font-weight: 300;
+}
+
+.article-content h2 {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 600;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: #1C1917;
+}
+
+.article-content h3 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: #292524;
+}
+
+.article-content p {
+  font-size: 1.125rem;
+  line-height: 1.85;
+  margin-bottom: 1.5rem;
+  color: #383532;
+}
+
+.article-content ul, .article-content ol {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.article-content ul li {
+  list-style-type: disc;
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F3EB;
+}
+::-webkit-scrollbar-thumb {
+  background: #D6CEBE;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8922E;
+}

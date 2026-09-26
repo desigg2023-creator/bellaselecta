@@ -1,0 +1,451 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("ADMIN") // ADMIN, EDITOR
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  icon               String?
+  coverImage         String?
+  sortOrder          Int      @default(0)
+  isActive           Boolean  @default(true)
+  showOnHomepage     Boolean  @default(true)
+  showInMenu         Boolean  @default(true)
+
+  // Multilingual content
+  name_it            String
+  name_es            String   @default("")
+  name_en            String   @default("")
+
+  description_it     String?
+  description_es     String?
+  description_en     String?
+
+  seoTitle_it        String?
+  seoTitle_es        String?
+  seoTitle_en        String?
+
+  seoDescription_it  String?
+  seoDescription_es  String?
+  seoDescription_en  String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  articles           Article[]
+  products           Product[]
+  offers             Offer[]
+  brands             Brand[]
+}
+
+model Article {
+  id                 String    @id @default(cuid())
+  slug               String    @unique
+  coverImage         String?
+  gallery            String?   // JSON array of image URLs
+  videoUrl           String?
+  status             String    @default("DRAFT") // DRAFT, PUBLISHED, UNPUBLISHED
+  isFeatured         Boolean   @default(false)   // Highlighted in Home
+  publishedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  categoryId         String
+  category           Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  // Multilingual fields
+  title_it           String
+  title_es           String    @default("")
+  title_en           String    @default("")
+
+  subtitle_it        String?
+  subtitle_es        String?
+  subtitle_en        String?
+
+  content_it         String    // Rich content / HTML
+  content_es         String    @default("")
+  content_en         String    @default("")
+
+  tags               String?   // Comma-separated or JSON
+
+  seoTitle_it        String?
+  seoTitle_es        String?
+  seoTitle_en        String?
+
+  seoDescription_it  String?
+  seoDescription_es  String?
+  seoDescription_en  String?
+
+  ogImage            String?
+
+  // Many-to-many relationships
+  relatedProducts     ArticleProduct[]
+  relatedOffers       ArticleOffer[]
+  relatedBrands       ArticleBrand[]
+  relatedRestaurants  ArticleRestaurant[]
+  relatedDestinations ArticleDestination[]
+  relatedExperiences  ArticleExperience[]
+}
+
+model Product {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  image              String?
+  gallery            String?  // JSON array
+
+  name_it            String
+  name_es            String   @default("")
+  name_en            String   @default("")
+
+  description_it     String?
+  description_es     String?
+  description_en     String?
+
+  price              Float
+  previousPrice      Float?
+  currency           String   @default("EUR")
+
+  externalUrl        String?
+  provider           String?
+  status             String   @default("PUBLISHED") // DRAFT, PUBLISHED
+  isFeatured         Boolean  @default(false)
+
+  categoryId         String?
+  category           Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  brandId            String?
+  brand              Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+
+  affiliateLinkId    String?
+  affiliateLink      AffiliateLink? @relation(fields: [affiliateLinkId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  relatedArticles    ArticleProduct[]
+  relatedOffers      ProductOffer[]
+}
+
+model Offer {
+  id                 String    @id @default(cuid())
+  slug               String    @unique
+  image              String?
+
+  title_it           String
+  title_es           String    @default("")
+  title_en           String    @default("")
+
+  description_it     String?
+  description_es     String?
+  description_en     String?
+
+  previousPrice      Float?
+  offerPrice         Float?
+  discountPercentage Int?
+  currency           String    @default("EUR")
+  promoCode          String?
+
+  externalUrl        String?
+  startDate          DateTime?
+  endDate            DateTime?
+  conditions_it      String?
+  conditions_es      String?
+  conditions_en      String?
+
+  isFeatured         Boolean   @default(false)
+  status             String    @default("ACTIVE") // ACTIVE, EXPIRED, DRAFT
+
+  categoryId         String?
+  category           Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  brandId            String?
+  brand              Brand?    @relation(fields: [brandId], references: [id], onDelete: SetNull)
+
+  affiliateLinkId    String?
+  affiliateLink      AffiliateLink? @relation(fields: [affiliateLinkId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  relatedArticles    ArticleOffer[]
+  relatedProducts    ProductOffer[]
+}
+
+model Brand {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  name               String
+  logo               String?
+  coverImage         String?
+
+  description_it     String?
+  description_es     String?
+  description_en     String?
+
+  website            String?
+  instagram          String?
+  facebook           String?
+  tiktok             String?
+  pinterest          String?
+  location           String?
+
+  isSponsored        Boolean  @default(false)
+  isPartner          Boolean  @default(false)
+
+  categoryId         String?
+  category           Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  products           Product[]
+  offers             Offer[]
+  relatedArticles    ArticleBrand[]
+}
+
+model Destination {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  name_it            String
+  name_es            String   @default("")
+  name_en            String   @default("")
+
+  region             String?
+  country            String   @default("Italia")
+
+  description_it     String?
+  description_es     String?
+  description_en     String?
+
+  coverImage         String?
+  gallery            String?  // JSON array
+  isFeatured         Boolean  @default(false)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  restaurants        Restaurant[]
+  experiences        Experience[]
+  relatedArticles    ArticleDestination[]
+}
+
+model Restaurant {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  name_it            String
+  name_es            String   @default("")
+  name_en            String   @default("")
+
+  type               String   @default("ristorante") // ristorante, trattoria, wine_bar, bistrot, gastronomia
+  city               String
+  region             String?
+  address            String?
+
+  description_it     String?
+  description_es     String?
+  description_en     String?
+
+  priceRange         String   @default("€€") // €, €€, €€€, €€€€
+  coverImage         String?
+  gallery            String?
+
+  website            String?
+  reservationLink    String?
+
+  destinationId      String?
+  destination        Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+
+  affiliateLinkId    String?
+  affiliateLink      AffiliateLink? @relation(fields: [affiliateLinkId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  relatedArticles    ArticleRestaurant[]
+}
+
+model Experience {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  title_it           String
+  title_es           String   @default("")
+  title_en           String   @default("")
+
+  type               String   @default("EXPERIENCE") // HOTEL, SPA, TOUR, EXPERIENCE, TASTING
+  description_it     String?
+  description_es     String?
+  description_en     String?
+
+  location           String?
+  destinationId      String?
+  destination        Destination? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+
+  price              Float?
+  currency           String   @default("EUR")
+  bookingLink        String?
+  coverImage         String?
+
+  affiliateLinkId    String?
+  affiliateLink      AffiliateLink? @relation(fields: [affiliateLinkId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  relatedArticles    ArticleExperience[]
+}
+
+model AffiliateLink {
+  id                 String   @id @default(cuid())
+  label              String   // Internal name
+  normalUrl          String
+  affiliateUrl       String
+  provider           String   // Amazon, Booking, Awin, Tradedoubler, etc.
+  trackingId         String?
+  isAffiliate        Boolean  @default(true)
+  status             String   @default("ACTIVE") // ACTIVE, INACTIVE
+  clickCount         Int      @default(0)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  products           Product[]
+  offers             Offer[]
+  restaurants        Restaurant[]
+  experiences        Experience[]
+}
+
+model Media {
+  id                 String   @id @default(cuid())
+  filename           String
+  originalName       String
+  mimeType           String
+  size               Int
+  url                String
+  altText_it         String?
+  altText_es         String?
+  altText_en         String?
+  createdAt          DateTime @default(now())
+}
+
+model SiteSettings {
+  id                     String   @id @default("singleton")
+  siteName               String   @default("BellaSelecta")
+  siteTagline_it         String   @default("La guida d'eccellenza per scoprire il meglio dello stile di vita italiano")
+  siteTagline_es         String   @default("La guía de excelencia para descubrir lo mejor del estilo de vida italiano")
+  siteTagline_en         String   @default("The curated guide to discovering the finest in Italian lifestyle")
+
+  contactEmail           String   @default("info@bellaselecta.it")
+  instagramUrl           String?  @default("https://instagram.com/bellaselecta")
+  facebookUrl            String?
+  pinterestUrl           String?
+
+  defaultMetaTitle_it    String   @default("BellaSelecta | Scoperta, Eleganza e Lifestyle Italiano")
+  defaultMetaDescription_it String @default("Scopri prodotti, luoghi, ristoranti, viaggi ed esperienze selezionate con cura ed eleganza.")
+
+  defaultMetaTitle_es    String   @default("BellaSelecta | Descubrimiento, Elegancia y Estilo de Vida")
+  defaultMetaDescription_es String @default("Descubre productos, lugares, restaurantes, viajes y experiencias seleccionadas con distinción.")
+
+  defaultMetaTitle_en    String   @default("BellaSelecta | Curated Discovery, Elegance & Italian Lifestyle")
+  defaultMetaDescription_en String @default("Discover carefully selected products, places, restaurants, travels, and experiences.")
+
+  featuredArticleId      String?  // Hero article ID
+  showLatestArticles     Boolean  @default(true)
+  showFeaturedSection    Boolean  @default(true)
+
+  updatedAt              DateTime @updatedAt
+}
+
+model AISettings {
+  id                 String    @id @default("singleton")
+  isEnabled          Boolean   @default(false) // DESACTIVADA POR DEFECTO
+  provider           String    @default("OPENAI") // OPENAI, ANTHROPIC, CUSTOM
+  apiKey             String?   // Encrypted/protected
+  model              String    @default("gpt-4o")
+  connectionStatus   String    @default("DISABLED") // DISABLED, ACTIVE, ERROR, NOT_CHECKED
+  lastCheckedAt      DateTime?
+
+  canPublish         Boolean   @default(false) // Permissions safety
+  canDelete          Boolean   @default(false)
+  canModifySettings  Boolean   @default(false)
+
+  updatedAt          DateTime  @updatedAt
+}
+
+// Pivot / Relationship tables
+model ArticleProduct {
+  articleId String
+  productId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, productId])
+}
+
+model ArticleOffer {
+  articleId String
+  offerId   String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  offer     Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, offerId])
+}
+
+model ArticleBrand {
+  articleId String
+  brandId   String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  brand     Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, brandId])
+}
+
+model ArticleRestaurant {
+  articleId    String
+  restaurantId String
+  article      Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, restaurantId])
+}
+
+model ArticleDestination {
+  articleId     String
+  destinationId String
+  article       Article     @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  destination   Destination @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, destinationId])
+}
+
+model ArticleExperience {
+  articleId    String
+  experienceId String
+  article      Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, experienceId])
+}
+
+model ProductOffer {
+  productId String
+  offerId   String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  offer     Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@id([productId, offerId])
+}
