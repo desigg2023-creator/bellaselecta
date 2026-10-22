@@ -15,78 +15,89 @@ export default async function HomePage({ params }: HomePageProps) {
   const locale = (locales.includes(params.locale as Locale) ? params.locale : defaultLocale) as Locale
   const t = uiTranslations[locale] || uiTranslations.it
 
-  // 1. Fetch site settings to check if a specific hero article was selected from the admin panel
-  const settings = await prisma.siteSettings.findUnique({
-    where: { id: 'singleton' },
-  })
+  let settings: any = null
+  let heroArticle: any = null
+  let latestArticles: any[] = []
+  let featuredArticles: any[] = []
+  let categoriesWithArticles: any[] = []
+  let activeOffers: any[] = []
+  let spotlightProducts: any[] = []
 
-  // 2. Fetch Hero Article (either explicitly selected or latest published featured article)
-  let heroArticle = null
-  if (settings?.featuredArticleId) {
-    heroArticle = await prisma.article.findUnique({
-      where: { id: settings.featuredArticleId },
-      include: { category: true },
+  try {
+    // 1. Fetch site settings to check if a specific hero article was selected from the admin panel
+    settings = await prisma.siteSettings.findUnique({
+      where: { id: 'singleton' },
     })
-  }
 
-  if (!heroArticle || heroArticle.status !== 'PUBLISHED') {
-    heroArticle = await prisma.article.findFirst({
-      where: { status: 'PUBLISHED', isFeatured: true },
+    // 2. Fetch Hero Article (either explicitly selected or latest published featured article)
+    if (settings?.featuredArticleId) {
+      heroArticle = await prisma.article.findUnique({
+        where: { id: settings.featuredArticleId },
+        include: { category: true },
+      })
+    }
+
+    if (!heroArticle || heroArticle.status !== 'PUBLISHED') {
+      heroArticle = await prisma.article.findFirst({
+        where: { status: 'PUBLISHED', isFeatured: true },
+        include: { category: true },
+        orderBy: { publishedAt: 'desc' },
+      })
+    }
+
+    // 3. Fetch Latest Articles
+    latestArticles = await prisma.article.findMany({
+      where: {
+        status: 'PUBLISHED',
+        id: heroArticle ? { not: heroArticle.id } : undefined,
+      },
       include: { category: true },
       orderBy: { publishedAt: 'desc' },
+      take: 4,
     })
-  }
 
-  // 3. Fetch Latest Articles (automatic stream - excludes hero to avoid repetition)
-  const latestArticles = await prisma.article.findMany({
-    where: {
-      status: 'PUBLISHED',
-      id: heroArticle ? { not: heroArticle.id } : undefined,
-    },
-    include: { category: true },
-    orderBy: { publishedAt: 'desc' },
-    take: 4,
-  })
-
-  // 4. Fetch Curated Featured Articles (marked manually as featured)
-  const featuredArticles = await prisma.article.findMany({
-    where: {
-      status: 'PUBLISHED',
-      isFeatured: true,
-      id: heroArticle ? { not: heroArticle.id } : undefined,
-    },
-    include: { category: true },
-    orderBy: { publishedAt: 'desc' },
-    take: 3,
-  })
-
-  // 5. Fetch Active Categories with their latest articles
-  const categoriesWithArticles = await prisma.category.findMany({
-    where: { isActive: true, showOnHomepage: true },
-    orderBy: { sortOrder: 'asc' },
-    include: {
-      articles: {
-        where: { status: 'PUBLISHED' },
-        orderBy: { publishedAt: 'desc' },
-        take: 3,
-        include: { category: true },
+    // 4. Fetch Curated Featured Articles
+    featuredArticles = await prisma.article.findMany({
+      where: {
+        status: 'PUBLISHED',
+        isFeatured: true,
+        id: heroArticle ? { not: heroArticle.id } : undefined,
       },
-    },
-  })
+      include: { category: true },
+      orderBy: { publishedAt: 'desc' },
+      take: 3,
+    })
 
-  // 6. Fetch Curated Offers for Homepage
-  const activeOffers = await prisma.offer.findMany({
-    where: { status: 'ACTIVE', isFeatured: true },
-    include: { brand: true, category: true, affiliateLink: true },
-    take: 3,
-  })
+    // 5. Fetch Active Categories with their latest articles
+    categoriesWithArticles = await prisma.category.findMany({
+      where: { isActive: true, showOnHomepage: true },
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        articles: {
+          where: { status: 'PUBLISHED' },
+          orderBy: { publishedAt: 'desc' },
+          take: 3,
+          include: { category: true },
+        },
+      },
+    })
 
-  // 7. Fetch Featured Products for Discovery spotlight
-  const spotlightProducts = await prisma.product.findMany({
-    where: { status: 'PUBLISHED', isFeatured: true },
-    include: { brand: true, affiliateLink: true },
-    take: 4,
-  })
+    // 6. Fetch Curated Offers for Homepage
+    activeOffers = await prisma.offer.findMany({
+      where: { status: 'ACTIVE', isFeatured: true },
+      include: { brand: true, category: true, affiliateLink: true },
+      take: 3,
+    })
+
+    // 7. Fetch Featured Products for Discovery spotlight
+    spotlightProducts = await prisma.product.findMany({
+      where: { status: 'PUBLISHED', isFeatured: true },
+      include: { brand: true, affiliateLink: true },
+      take: 4,
+    })
+  } catch (err) {
+    console.warn('Warning: Database error in HomePage:', err?.message || err)
+  }
 
   const heroTitle = heroArticle ? getLocalized(heroArticle, 'title', locale) : ''
   const heroSubtitle = heroArticle ? getLocalized(heroArticle, 'subtitle', locale) : ''
@@ -175,11 +186,18 @@ export default async function HomePage({ params }: HomePageProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {latestArticles.map((article) => (
-            <ArticleCard key={article.id} article={article} locale={locale} layout="horizontal" />
-          ))}
-        </div>
+        {latestArticles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {latestArticles.map((article) => (
+              <ArticleCard key={article.id} article={article} locale={locale} layout="horizontal" />
+            ))}
+          </div>
+        ) : (
+          <div className="py-12 text-center text-stone-500 font-light border border-dashed border-[#DFD6C2] rounded-xl bg-[#FAF8F3]">
+            <p className="font-serif text-lg text-stone-700 mb-1">Benvenuti su BellaSelecta</p>
+            <p className="text-sm">I primi articoli e selezioni editoriali saranno pubblicati a breve.</p>
+          </div>
+        )}
       </section>
 
       {/* 3. SELEZIONE IN EVIDENZA (Curated manual selection) */}
