@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "node server.js",
+    "start": "node scripts/init-and-start.js",
     "postinstall": "prisma generate",
     "lint": "next lint",
     "payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload",
