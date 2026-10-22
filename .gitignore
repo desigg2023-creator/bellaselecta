@@ -28,3 +28,9 @@ prisma/*.db
 prisma/*.db-journal
 public/uploads/*
 !public/uploads/.gitkeep
+
+# archives & backups
+*.zip
+*.tar.gz
+*.rar
+

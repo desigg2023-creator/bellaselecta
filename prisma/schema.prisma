@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -77,11 +77,11 @@ model Article {
   subtitle_es        String?
   subtitle_en        String?
 
-  content_it         String    // Rich content / HTML
-  content_es         String    @default("")
-  content_en         String    @default("")
+  content_it         String    @db.Text // Rich content / HTML
+  content_es         String    @default("") @db.Text
+  content_en         String    @default("") @db.Text
 
-  tags               String?   // Comma-separated or JSON
+  tags               String?   @db.Text // Comma-separated or JSON
 
   seoTitle_it        String?
   seoTitle_es        String?
